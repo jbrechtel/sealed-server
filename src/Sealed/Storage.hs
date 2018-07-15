@@ -1,13 +1,22 @@
 module Sealed.Storage
-  ( store
-  , load
+  ( storeUser
+  , loadUsers
+  , storeMessage
+  , loadMessages
   ) where
 
 import Sealed.Message
+import Sealed.User
 
-store :: Message -> IO ()
-store _ = pure ()
+storeMessage :: UserId -> Message -> IO ()
+storeMessage _ _ = pure ()
 
-load :: IO [Message]
-load = pure []
+storeUser :: User -> IO ()
+storeUser _ = pure ()
+
+loadMessages :: UserId -> IO [Message]
+loadMessages _ = pure []
+
+loadUsers :: IO [User]
+loadUsers = pure []
 
