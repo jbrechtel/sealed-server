@@ -5,18 +5,32 @@ module Sealed.Storage
   , loadMessages
   ) where
 
+import Sealed.Config
 import Sealed.Message
-import Sealed.User
+import Sealed.User (User(..), UserId, userIdToString)
 
-storeMessage :: UserId -> Message -> IO ()
-storeMessage _ _ = pure ()
+import System.Directory (createDirectoryIfMissing)
+import System.FilePath.Posix ((</>))
+import Data.Aeson (encodeFile)
 
-storeUser :: User -> IO ()
-storeUser _ = pure ()
+storeMessage :: Config -> UserId -> Message -> IO ()
+storeMessage _ _ _ = pure ()
 
-loadMessages :: UserId -> IO [Message]
-loadMessages _ = pure []
+storeUser :: Config -> User -> IO ()
+storeUser config user = do
+  createDirectoryIfMissing True $ messagesPath config user
+  encodeFile (userPath config user) user
 
-loadUsers :: IO [User]
-loadUsers = pure []
+loadMessages :: Config -> UserId -> IO [Message]
+loadMessages _ _ = pure []
 
+loadUsers :: Config -> IO [User]
+loadUsers _ = pure []
+
+userPath :: Config -> User -> FilePath
+userPath config user =
+  (configDataPath config) </> (userIdToString $ userId user) <> ".json"
+
+messagesPath :: Config -> User -> FilePath
+messagesPath config user =
+  (configDataPath config) </> (userIdToString $ userId user) </> "messages"
