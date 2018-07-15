@@ -7,7 +7,7 @@ module Sealed.User
   ) where
 
 import Web.Scotty (Parsable(..))
-import Data.Aeson (ToJSON(..), object, (.=))
+import Data.Aeson (ToJSON(..), FromJSON(..), Value(..), object, (.=), (.:))
 import Data.Text (Text)
 import Data.Text.Lazy (toStrict)
 import Data.UUID (UUID, fromText, toString)
@@ -25,8 +25,16 @@ instance ToJSON User where
            , "user_id"      .= userId user
            ]
 
+instance FromJSON User where
+  parseJSON (Object o) =
+    User <$> o .: "user_id"
+         <*> o .: "display_name"
+         <*> o .: "public_key"
+
+  parseJSON _ = fail "User JSON invalid"
+
 newtype UserId = UserId UUID
-  deriving (ToJSON)
+  deriving (ToJSON, FromJSON)
 
 userIdToString :: UserId -> String
 userIdToString (UserId uuid) = toString uuid
@@ -38,13 +46,13 @@ instance Parsable UserId where
       Nothing -> Left "not a UUID"
 
 newtype UserDisplayName = UserDisplayName Text
-  deriving (ToJSON)
+  deriving (ToJSON, FromJSON)
 
 instance Parsable UserDisplayName where
   parseParam = Right . UserDisplayName . toStrict
 
 newtype UserPublicKey = UserPublicKey Text
-  deriving (ToJSON)
+  deriving (ToJSON, FromJSON)
 
 instance Parsable UserPublicKey where
   parseParam = Right . UserPublicKey . toStrict

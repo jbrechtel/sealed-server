@@ -20,7 +20,9 @@ sealedOK = text "OK!"
 
 listUsers :: ActionM ()
 listUsers = do
-  json ([] :: [User])
+  config <- liftIO loadConfigFromEnvironment
+  users <- liftIO $ loadUsers config
+  json users
 
 createUser :: ActionM ()
 createUser = do
