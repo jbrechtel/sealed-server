@@ -1,6 +1,10 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Lib
+import Web.Scotty
 
 main :: IO ()
-main = someFunc
+main =
+  scotty 3000 $
+    get "/" $ do
+      html "<h1>Scotty</h1>"
