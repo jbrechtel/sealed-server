@@ -6,7 +6,7 @@ module Sealed.Storage
   ) where
 
 import Sealed.Config
-import Sealed.Message
+import Sealed.Message (Message(..), messageIdToString)
 import Sealed.User (User(..), UserId, userIdToString)
 
 import System.Directory (createDirectoryIfMissing, listDirectory)
@@ -15,11 +15,13 @@ import Data.Aeson (encodeFile, decodeFileStrict)
 import Data.Maybe (catMaybes)
 
 storeMessage :: Config -> UserId -> Message -> IO ()
-storeMessage _ _ _ = pure ()
+storeMessage config uId message = do
+  createDirectoryIfMissing True $ messagesPath config uId
+  encodeFile (messagePath config uId message) message
 
 storeUser :: Config -> User -> IO ()
 storeUser config user = do
-  createDirectoryIfMissing True $ messagesPath config user
+  createDirectoryIfMissing True $ messagesPath config (userId user)
   createDirectoryIfMissing True $ usersPath config
   encodeFile (userPath config user) user
 
@@ -41,6 +43,10 @@ userPath :: Config -> User -> FilePath
 userPath config user =
   (usersPath config) </> (userIdToString $ userId user) <> ".json"
 
-messagesPath :: Config -> User -> FilePath
-messagesPath config user =
-  (configDataPath config) </> (userIdToString $ userId user) </> "messages"
+messagesPath :: Config -> UserId -> FilePath
+messagesPath config uId =
+  (configDataPath config) </> (userIdToString $ uId) </> "messages"
+
+messagePath :: Config -> UserId -> Message -> FilePath
+messagePath config uId message =
+  (messagesPath config uId) </> (messageIdToString $ messageId message) <> ".json"
