@@ -17,6 +17,7 @@ main = do
     get "/sealed/users" $ listUsers config
     post "/sealed/users/:user_id" $ createUser config
     post "/sealed/users/:user_id/messages/:name" $ postMessage config
+    get "/sealed/users/:user_id/messages" $ listMessages config
 
 
 sealedOK :: ActionM ()
@@ -26,6 +27,13 @@ listUsers :: Config -> ActionM ()
 listUsers config = do
   users <- liftIO $ loadUsers config
   json users
+
+listMessages :: Config -> ActionM ()
+listMessages config = do
+  uId <- param "user_id"
+  messages <- liftIO $ loadMessages config uId
+  liftIO $ clearMessages config uId
+  json messages
 
 createUser :: Config -> ActionM ()
 createUser config = do

@@ -3,13 +3,14 @@ module Sealed.Storage
   , loadUsers
   , storeMessage
   , loadMessages
+  , clearMessages
   ) where
 
 import Sealed.Config
 import Sealed.Message (Message(..), messageIdToString)
 import Sealed.User (User(..), UserId, userIdToString)
 
-import System.Directory (createDirectoryIfMissing, listDirectory)
+import System.Directory (createDirectoryIfMissing, listDirectory, removeFile)
 import System.FilePath.Posix ((</>))
 import Data.Aeson (encodeFile, decodeFileStrict)
 import Data.Maybe (catMaybes)
@@ -25,8 +26,21 @@ storeUser config user = do
   createDirectoryIfMissing True $ usersPath config
   encodeFile (userPath config user) user
 
+clearMessages :: Config -> UserId -> IO ()
+clearMessages config uId = do
+  msgFiles <- messageFiles config uId
+  mapM_ removeFile msgFiles
+
 loadMessages :: Config -> UserId -> IO [Message]
-loadMessages _ _ = pure []
+loadMessages config uId = do
+  msgFiles <- messageFiles config uId
+  messages <- mapM decodeFileStrict msgFiles
+  pure $ catMaybes messages
+
+messageFiles :: Config -> UserId -> IO [FilePath]
+messageFiles config uId = do
+  relativeMessageFiles <- listDirectory $ messagesPath config uId
+  pure $ ((messagesPath config uId) </>) <$> relativeMessageFiles
 
 loadUsers :: Config -> IO [User]
 loadUsers config = do
