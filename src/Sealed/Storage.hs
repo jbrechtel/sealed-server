@@ -5,13 +5,14 @@ module Sealed.Storage
   , storeMessage
   , loadMessages
   , clearMessages
+  , userExists
   ) where
 
 import Sealed.Config
 import Sealed.Message (Message(..), messageIdToString)
 import Sealed.User (User(..), UserId, userIdToString)
 
-import System.Directory (createDirectoryIfMissing, listDirectory, removeFile)
+import System.Directory (createDirectoryIfMissing, listDirectory, removeFile, doesFileExist)
 import System.FilePath.Posix ((</>))
 import Data.Aeson (encodeFile, decodeFileStrict)
 import Data.Maybe (catMaybes)
@@ -53,6 +54,9 @@ loadUsers config = do
 loadUser :: Config -> UserId -> IO (Maybe User)
 loadUser config uId = do
   decodeFileStrict $ userPath config uId
+
+userExists :: Config -> UserId -> IO Bool
+userExists config uId = doesFileExist $ userPath config uId
 
 usersPath :: Config -> FilePath
 usersPath config =

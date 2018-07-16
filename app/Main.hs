@@ -2,7 +2,8 @@
 module Main where
 
 import Web.Scotty
-import Data.ByteString.Lazy (toStrict)
+import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Text.Lazy as LazyText
 import Sealed.Config
 import Sealed.User
 import Sealed.Message
@@ -31,15 +32,12 @@ listUsers config = do
 listMessages :: Config -> ActionM ()
 listMessages config = do
   uId <- param "user_id"
-  apiKey <- param "api_key"
+  apiKey <- (fmap . fmap) (UserApiKey . LazyText.toStrict) $ header "Authorization"
   user <- liftIO $ loadUser config uId
 
-  messages <- case user of
-                Just u ->
-                  if (userApiKey u) == apiKey
-                  then loadAndClearMessages config uId
-                  else pure []
-                Nothing -> pure []
+  messages <- if (userApiKey <$> user) == apiKey
+              then loadAndClearMessages config uId
+              else pure []
 
   json messages
 
@@ -51,19 +49,23 @@ loadAndClearMessages config uId = do
 
 createUser :: Config -> ActionM ()
 createUser config = do
-  user <- User <$> param "user_id"
-               <*> param "display_name"
-               <*> param "public_key"
-               <*> param "api_key"
-  liftIO $ storeUser config user
-  json ("OK!" :: String)
+  uId <- param "user_id"
+  exists <- liftIO $ userExists config uId
+  if exists
+  then json ("OK!" :: String)
+  else do
+    user <- User uId <$> param "display_name"
+                     <*> param "public_key"
+                     <*> param "api_key"
+    liftIO $ storeUser config user
+    json ("OK!" :: String)
 
 postMessage :: Config -> ActionM ()
 postMessage config = do
   uId <- param "user_id"
   msgId <- liftIO nextMessageId
   msgName <- param "name"
-  msgBody <- (mkMessageBody . toStrict) <$> body
+  msgBody <- (mkMessageBody . LBS.toStrict) <$> body
   let message = Message msgId msgName msgBody
   liftIO $ storeMessage config uId message
   json ("OK!" :: String)

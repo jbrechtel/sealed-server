@@ -3,6 +3,7 @@
 module Sealed.User
   ( User(..)
   , UserId
+  , UserApiKey(..)
   , userIdToString
   ) where
 
