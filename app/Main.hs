@@ -31,15 +31,30 @@ listUsers config = do
 listMessages :: Config -> ActionM ()
 listMessages config = do
   uId <- param "user_id"
+  apiKey <- param "api_key"
+  user <- liftIO $ loadUser config uId
+
+  messages <- case user of
+                Just u ->
+                  if (userApiKey u) == apiKey
+                  then loadAndClearMessages config uId
+                  else pure []
+                Nothing -> pure []
+
+  json messages
+
+loadAndClearMessages :: Config -> UserId -> ActionM [Message]
+loadAndClearMessages config uId = do
   messages <- liftIO $ loadMessages config uId
   liftIO $ clearMessages config uId
-  json messages
+  pure messages
 
 createUser :: Config -> ActionM ()
 createUser config = do
   user <- User <$> param "user_id"
                <*> param "display_name"
                <*> param "public_key"
+               <*> param "api_key"
   liftIO $ storeUser config user
   json ("OK!" :: String)
 

@@ -1,6 +1,7 @@
 module Sealed.Storage
   ( storeUser
   , loadUsers
+  , loadUser
   , storeMessage
   , loadMessages
   , clearMessages
@@ -24,7 +25,7 @@ storeUser :: Config -> User -> IO ()
 storeUser config user = do
   createDirectoryIfMissing True $ messagesPath config (userId user)
   createDirectoryIfMissing True $ usersPath config
-  encodeFile (userPath config user) user
+  encodeFile (userPath config $ userId user) user
 
 clearMessages :: Config -> UserId -> IO ()
 clearMessages config uId = do
@@ -49,13 +50,17 @@ loadUsers config = do
   users <- mapM decodeFileStrict absoluteUserFiles
   pure $ catMaybes users
 
+loadUser :: Config -> UserId -> IO (Maybe User)
+loadUser config uId = do
+  decodeFileStrict $ userPath config uId
+
 usersPath :: Config -> FilePath
 usersPath config =
   (configDataPath config) </> "users"
 
-userPath :: Config -> User -> FilePath
-userPath config user =
-  (usersPath config) </> (userIdToString $ userId user) <> ".json"
+userPath :: Config -> UserId -> FilePath
+userPath config uId =
+  (usersPath config) </> (userIdToString $ uId) <> ".json"
 
 messagesPath :: Config -> UserId -> FilePath
 messagesPath config uId =

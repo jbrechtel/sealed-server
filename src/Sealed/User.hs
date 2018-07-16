@@ -16,6 +16,7 @@ data User =
   User { userId :: UserId
        , userDisplayName :: UserDisplayName
        , userPublicKey :: UserPublicKey
+       , userApiKey :: UserApiKey
        }
 
 instance ToJSON User where
@@ -23,6 +24,7 @@ instance ToJSON User where
     object [ "display_name" .= userDisplayName user
            , "public_key"   .= userPublicKey user
            , "user_id"      .= userId user
+           , "api_key"      .= userApiKey user
            ]
 
 instance FromJSON User where
@@ -30,6 +32,7 @@ instance FromJSON User where
     User <$> o .: "user_id"
          <*> o .: "display_name"
          <*> o .: "public_key"
+         <*> o .: "api_key"
 
   parseJSON _ = fail "User JSON invalid"
 
@@ -56,3 +59,9 @@ newtype UserPublicKey = UserPublicKey Text
 
 instance Parsable UserPublicKey where
   parseParam = Right . UserPublicKey . toStrict
+
+newtype UserApiKey = UserApiKey Text
+  deriving (Eq, ToJSON, FromJSON)
+
+instance Parsable UserApiKey where
+  parseParam = Right . UserApiKey . toStrict
