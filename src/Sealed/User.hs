@@ -25,7 +25,6 @@ instance ToJSON User where
     object [ "display_name" .= userDisplayName user
            , "public_key"   .= userPublicKey user
            , "user_id"      .= userId user
-           , "api_key"      .= userApiKey user
            ]
 
 instance FromJSON User where
